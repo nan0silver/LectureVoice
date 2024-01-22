@@ -2,6 +2,7 @@
     package="com.example.second_flutter_app">
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:label="second_flutter_app"

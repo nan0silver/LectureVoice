@@ -38,7 +38,17 @@ dependencies:
   image_picker: 0.8.5+3
   video_player: 2.4.6
   dio: ^4.0.0
+  http: 0.13.5
   export_video_frame: ^0.0.7
+  video_thumbnail: ^0.5.3
+  path_provider: ^2.0.15
+  firebase_core: ^2.14.0
+
+  cloud_firestore: ^4.4.3
+  firebase_storage: ^11.0.15
+  json_annotation: ^4.7.0
+  flutter_image_compress: ^2.0.4
+  fluttertoast: ^8.0.8
 
 dev_dependencies:
   flutter_test:
@@ -49,7 +59,9 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^2.0.0
+  flutter_lints: ^2.0.1
+  build_runner: ^2.3.3
+  json_serializable: ^6.5.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -68,6 +80,7 @@ flutter:
   #   - images/a_dot_ham.jpeg
   assets:
     - asset/img/
+    - asset/video/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

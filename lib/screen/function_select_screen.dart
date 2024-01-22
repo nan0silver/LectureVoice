@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart'; //XFile형태로 동영상 받음
 import 'package:second_flutter_app/component/custom_video_player.dart';
+import 'package:second_flutter_app/screen/video_select_screen.dart';
+import 'package:second_flutter_app/screen/home_screen.dart';
+import 'package:video_thumbnail/video_thumbnail.dart';
 
-//맨 처음 페이지
+//=========2 페이지========================
+//하단에 3-2 페이지도 이어짐
+//장면 전환 time stamp request 기능까지는 여기서
 
 class FunctionSelectScreen extends StatefulWidget {
   const FunctionSelectScreen({Key? key}) : super(key: key);
@@ -28,22 +33,39 @@ class _FunctionSelectScreen extends State<FunctionSelectScreen> {
       width: MediaQuery.of(context).size.width, //넓이 최대로
       decoration: getBoxDecoration(),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _AppName(),
+          AppName(),
+          //SizedBox(height: 300.0,),
+          SizedBox(
+            width: 250.0,
+            height: 70.0,
+            child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const VideoSelectScreen()),
+                    );
+                  },
+                  child: Text(
+                      'CONVERTED\n Lecture List',
+                      style: TextStyle(
+                        fontSize: 25,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white70,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color.fromRGBO(128, 151, 213, 50),
+                    side: BorderSide(width: 2, color: Colors.white)
+                  )
+              ),
+          ),
+          //SizedBox(height: 50.0,),
           _Logo(
             onTap: onNewVideoPressed,
           ),
-          SizedBox(height: 30.0),
-          Text(
-              '강의 듣기 시작 버튼',
-              style: TextStyle(
-                color: Color(0xFFB9E2FA),
-                fontSize: 20.0,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Aggro',
-              )
-          ),
+          SizedBox(height: 20.0,)
         ],
       ),
     );
@@ -73,6 +95,7 @@ class _FunctionSelectScreen extends State<FunctionSelectScreen> {
     );
   }
 
+
   Widget renderVideo() { //동영상 선택 후
     return Center(
       child: CustomVideoPlayer(
@@ -83,6 +106,7 @@ class _FunctionSelectScreen extends State<FunctionSelectScreen> {
   }
 }
 
+
 class _Logo extends StatelessWidget{ //로고 출력 위젯
   final GestureTapCallback onTap;
 
@@ -91,58 +115,37 @@ class _Logo extends StatelessWidget{ //로고 출력 위젯
     Key? key,
   }) :super(key: key);
 
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Text(
-        'Convert Lecture List',
-        style: TextStyle(
-            fontSize: 25,
-            fontWeight: FontWeight.w300,
+      child: Container(
+        height: 70,
+        width: 250,
+        decoration: BoxDecoration(
+          color: Color.fromRGBO(128, 151, 213, 50),
+          border: Border.all(
+            color: Colors.white,
+            width: 2
+          ),
+          boxShadow: [ BoxShadow(
+            color: Colors.black26,
+            blurRadius: 10, //흐림 정도
+            spreadRadius: 0.7, //두께
+            offset: Offset(3,3)
+          )],
+          borderRadius: BorderRadius.all(Radius.circular(3.5))
+        ),
+        child: Text(
+          'CONVERT\n Lecture List',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+              fontSize: 25,
+              fontWeight: FontWeight.bold,
+              color: Colors.white70,
+          ),
         ),
       ),
-    );
-  }
-}
-
-class _AppName extends StatelessWidget{ //앱 제목 출력 위젯
-  const _AppName({Key? key,}) :super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    const textStyle = TextStyle(
-      color: Colors.white,
-      fontSize: 30.0,
-      fontWeight: FontWeight.w300,
-    );
-
-    return Container(
-        margin: EdgeInsets.fromLTRB(70, 0, 70, 30),
-        padding: EdgeInsets.all(10),
-        decoration: BoxDecoration(
-            border: Border.all(
-                width: 5,
-                color: Colors.white
-            )
-        ),
-        child:
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'LECTURE',
-              style: textStyle,
-            ),
-            Text(
-              'PLAYER',
-              style: textStyle.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            )
-          ],
-        )
     );
   }
 }
