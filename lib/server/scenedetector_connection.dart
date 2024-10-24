@@ -10,7 +10,6 @@ class SceneDetectorConnection {
   var baseurl = 'http://127.0.0.1:8000';
   //http://127.0.0.1:5000/find_scenes - 로컬
   //var baseurl = 'http://192.168.153.81:5000';
-  //http://192.168.153.81:5000/find_scenes - 연구실 서버컴
   var sceneDio = Dio();
 
   Future<List<dynamic>> sceneDetectorRequest (String videoPath) async {
@@ -20,16 +19,14 @@ class SceneDetectorConnection {
       var formData = FormData.fromMap({'video_path': videoPath});
       Response response = await sceneDio.post('$baseurl/find_scenes', data: formData);
       String responseString = response.data;
-      debugPrint("==debugPrint==");
+      debugPrint("==sever/screnedetector_connection debugPrint==");
       debugPrint(responseString);
       debugPrint("==============");
 
       List<dynamic> data = jsonDecode(response.data);
-
-      debugPrint("done!!");
       return data;
     } catch (e) {
-      debugPrint("e start");
+      debugPrint("ever/screnedetector_connection error start");
       debugPrint(e as String?);
       debugPrint("fail!!");
       List<List<dynamic>> error = [[e]];

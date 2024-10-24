@@ -47,7 +47,7 @@ class _ImageProcessingScreen  extends State<ImageProcessingScreen> {
     imageURL = widget.imageURLList;
     //전 페이지에서 넘겨준 이미지 URL 리스트
     //이 url은 firebase에서 이미지 이름(타임라인)으로 다운받은 것
-    //도데체 어디서 이미지 width를 500으로 바꿈..?
+
     print("number of image url list = ${imageURL.length}");
 
     return Scaffold(
@@ -67,6 +67,7 @@ class _ImageProcessingScreen  extends State<ImageProcessingScreen> {
                     children: [
                       returnTimeline(i),
                       Image.network(imageURL[(i-1)]),
+                      //Image.network(await downloadThumbnail(i)),
                       FutureBuilder(
                           future: processImage3(imageURL[(i-1)]),
                           builder: (BuildContext context, AsyncSnapshot snapshot) {
@@ -274,7 +275,7 @@ class _ImageProcessingScreen  extends State<ImageProcessingScreen> {
     List<int> millitime = widget.millitime;
     int tempMillTime = millitime[index-1];
 
-    Reference _ref = FirebaseStorage.instance.ref().child("test/image_file_$tempMillTime");
+    Reference _ref = FirebaseStorage.instance.ref().child("test2/image__$tempMillTime");
     String _thumbnailImageURL = await _ref.getDownloadURL();
     print("thumbnail image url = $_thumbnailImageURL");
 
@@ -315,8 +316,8 @@ class _ImageProcessingScreen  extends State<ImageProcessingScreen> {
         buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
 
     try {
-      String flaskUrl = 'http://127.0.0.1:5000/process_image';
-      //flask_rectangle_detect.py connection
+      String flaskUrl = 'http://127.0.0.1:5000/process_image2';
+      //flask_rectangle_detect2.py connection
 
       Map<String, String> headers = {
         'Content-Type': 'multipart/form-data',
@@ -374,10 +375,10 @@ class _ImageProcessingScreen  extends State<ImageProcessingScreen> {
   Future<dynamic> getDiagramSentense(String cropimageUrl, String imageNum) async {
 
 
-    Reference _ref = FirebaseStorage.instance.ref().child('images/your_image_${imageNum}.jpg');
+    Reference _ref = FirebaseStorage.instance.ref().child('cropImages/crop_image_${imageNum}.jpg');
     String _url = await _ref.getDownloadURL();
 
-    print("\n\nimage num ?? $imageNum");
+    print("\n\nImage num: $imageNum");
 
     final http.Response responseData = await http.get(Uri.parse(_url));
     Uint8List uint8list = responseData.bodyBytes;
@@ -449,7 +450,7 @@ class _ImageProcessingScreen  extends State<ImageProcessingScreen> {
 
       // Firebase Storage에 접근
       FirebaseStorage storage = FirebaseStorage.instance;
-      Reference storageReference = storage.ref().child("images/your_image_${imageNum}.jpg");
+      Reference storageReference = storage.ref().child("cropImages/crop_image_${imageNum}.jpg");
 
       // 이미지 업로드
       await storageReference.putFile(_file);

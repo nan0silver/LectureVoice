@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart'; //XFile형태로 동영상 받음
 import 'package:second_flutter_app/component/custom_video_player.dart';
-import 'package:second_flutter_app/screen/video_select_screen.dart';
+import 'package:second_flutter_app/screen/saved_results_screen.dart';
 import 'package:second_flutter_app/screen/home_screen.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 
@@ -36,30 +36,29 @@ class _FunctionSelectScreen extends State<FunctionSelectScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           AppName(),
-          //SizedBox(height: 300.0,),
           SizedBox(
             width: 250.0,
             height: 70.0,
             child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const VideoSelectScreen()),
-                    );
-                  },
-                  child: Text(
-                      'CONVERTED\n Lecture List',
-                      style: TextStyle(
-                        fontSize: 25,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white70,
-                    ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SavedResultsScreen()),
+                  );
+                },
+                child: Text(
+                  '저장된 강의 시청하기',
+                  style: TextStyle(
+                    fontSize: 25,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
-                  style: ElevatedButton.styleFrom(
+                ),
+                style: ElevatedButton.styleFrom(
                     backgroundColor: Color.fromRGBO(128, 151, 213, 50),
                     side: BorderSide(width: 2, color: Colors.white)
-                  )
-              ),
+                )
+            ),
           ),
           //SizedBox(height: 50.0,),
           _Logo(
@@ -123,27 +122,29 @@ class _Logo extends StatelessWidget{ //로고 출력 위젯
         height: 70,
         width: 250,
         decoration: BoxDecoration(
-          color: Color.fromRGBO(128, 151, 213, 50),
-          border: Border.all(
-            color: Colors.white,
-            width: 2
-          ),
-          boxShadow: [ BoxShadow(
-            color: Colors.black26,
-            blurRadius: 10, //흐림 정도
-            spreadRadius: 0.7, //두께
-            offset: Offset(3,3)
-          )],
-          borderRadius: BorderRadius.all(Radius.circular(3.5))
+            color: const Color.fromRGBO(128, 151, 213, 50),
+            border: Border.all(
+                color: Colors.white,
+                width: 2
+            ),
+            boxShadow: const [ BoxShadow(
+                color: Colors.black26,
+                blurRadius: 10, //흐림 정도
+                spreadRadius: 0.7, //두께
+                offset: Offset(3,3)
+            )],
+            borderRadius: const BorderRadius.all(Radius.circular(3.5))
         ),
-        child: Text(
-          'CONVERT\n Lecture List',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-              fontSize: 25,
-              fontWeight: FontWeight.bold,
-              color: Colors.white70,
-          ),
+        child: const Center(
+          child: Text(
+              '새로운 강의 열기',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 25,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
         ),
       ),
     );

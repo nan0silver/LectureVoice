@@ -29,6 +29,7 @@ class _LectureTextScreen extends State<LectureTextScreen>{
     int numberOfThumbnailImage = widget.timeline.length;
     imageURL = widget.imageURLList;
     print("number of image url list = ${imageURL.length}");
+    print(imageURL);
 
     return Scaffold(
       appBar: AppBar(
