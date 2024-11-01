@@ -3,6 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:flutter_tts/flutter_tts.dart';
+import 'package:second_flutter_app/screen/home_screen.dart';
 
 class ResultScreen extends StatefulWidget {
   final List<String> timeline;
@@ -23,20 +25,38 @@ class ResultScreen extends StatefulWidget {
 class _ResultScreenState extends State<ResultScreen> {
   List<Map<String, dynamic>> _results = [];
   bool _isLoading = true;
-  TextEditingController _fileNameController = TextEditingController(); // 파일 이름 입력 컨트롤러 추가
+  TextEditingController _fileNameController = TextEditingController();
   late Database database;
+  late FlutterTts flutterTts;
+  bool isPlaying = false;
+  bool isReadingAll = false;
+  String _currentText = '';
 
   @override
   void initState() {
     super.initState();
-    _initDatabase(); // 데이터베이스 초기화
+    _initDatabase();
     _fetchResults();
+    _initTts();
   }
 
-  // 데이터베이스 초기화 함수
+  // TTS 초기화 함수
+  void _initTts() {
+    flutterTts = FlutterTts();
+    flutterTts.setLanguage("ko-KR"); // 한국어로 설정
+    flutterTts.setSpeechRate(0.5); // 속도 설정
+    flutterTts.setCompletionHandler(() {
+      setState(() {
+        isPlaying = false;
+        isReadingAll = false;
+      });
+    });
+  }
+
+  // 데이터베이스 초기화
   Future<void> _initDatabase() async {
     database = await openDatabase(
-      join(await getDatabasesPath(), 'results.db'), // 데이터베이스 파일 경로
+      join(await getDatabasesPath(), 'results.db'),
       onCreate: (db, version) {
         return db.execute(
           "CREATE TABLE results(id INTEGER PRIMARY KEY AUTOINCREMENT, fileName TEXT, content TEXT)",
@@ -46,16 +66,45 @@ class _ResultScreenState extends State<ResultScreen> {
     );
   }
 
-  // 모든 이미지 URL에 대한 결과를 가져오는 함수
+  // 결과 저장 함수
+  Future<void> _saveTextToDatabase(String fileName, BuildContext context) async {
+    try {
+      StringBuffer textContent = StringBuffer();
+      for (var result in _results) {
+        textContent.write("Timestamp: ${result['timeStamp']}\n");
+        textContent.write("OCR Result:\n${result['ocrResult']}\n");
+        textContent.write("다이어그램 분석 결과:\n${result['diagramResult']}\n\n");
+      }
+
+      await database.insert(
+        'results',
+        {
+          'fileName': fileName,
+          'content': textContent.toString(),
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Data saved to database as $fileName'),
+          ),
+        );
+      }
+    } catch (e) {
+      print("Error saving data to database: $e");
+    }
+  }
+
+  // 모든 이미지 URL에 대한 결과 가져오기
   Future<void> _fetchResults() async {
     if (widget.imageURLList.isEmpty || widget.timeline.isEmpty) {
       print("Error: The imageURLList or timeline is empty.");
-      return; // 리스트가 비어 있으면 더 이상 진행하지 않음
+      return;
     }
 
     List<Map<String, dynamic>> results = [];
-
-    // 두 리스트의 길이가 다른 경우, 작은 쪽에 맞춰 루프를 돌림
     int length = widget.imageURLList.length < widget.timeline.length
         ? widget.imageURLList.length
         : widget.timeline.length;
@@ -64,13 +113,11 @@ class _ResultScreenState extends State<ResultScreen> {
       String imageUrl = widget.imageURLList[i];
       String timeStamp = widget.timeline[i];
 
-      // OCR 요청
       final ocrResponse = await _sendRequest('http://127.0.0.1:5000/ocr_request', imageUrl);
       String inferTexts = "";
       if (ocrResponse != null) {
         for (var inferText in ocrResponse) {
           List<String> punctuations = ['.', '?', '!', '·'];
-
           if (punctuations.any((p) => inferText.endsWith(p))) {
             inferTexts += inferText + "\n";
           } else {
@@ -79,14 +126,12 @@ class _ResultScreenState extends State<ResultScreen> {
         }
       }
 
-      // Diagram Analysis 요청
       final diagramResponse = await _sendRequest('http://127.0.0.1:5000/diagram_analysis', imageUrl);
       String diagramTexts = "";
       if (diagramResponse != null) {
         diagramTexts = diagramResponse.join("\n");
       }
 
-      // 결과 저장
       results.add({
         "timeStamp": timeStamp,
         "ocrResult": inferTexts,
@@ -94,14 +139,13 @@ class _ResultScreenState extends State<ResultScreen> {
       });
     }
 
-    // 상태 업데이트
     setState(() {
       _results = results;
       _isLoading = false;
     });
   }
 
-  // Flask 서버로 요청을 보내는 함수
+  // Flask 서버로 요청
   Future<List<dynamic>?> _sendRequest(String url, String imageUrl) async {
     try {
       final response = await http.post(
@@ -122,58 +166,73 @@ class _ResultScreenState extends State<ResultScreen> {
     }
   }
 
-  // 텍스트를 데이터베이스에 저장하는 함수
-  Future<void> _saveTextToDatabase(String fileName, BuildContext context) async {
-    try {
-      // Save text content to a StringBuffer
-      StringBuffer textContent = StringBuffer();
-      for (var result in _results) {
-        textContent.write("Timestamp: ${result['timeStamp']}\n");
-        textContent.write("OCR Result:\n${result['ocrResult']}\n");
-        textContent.write("Diagram Analysis Result:\n${result['diagramResult']}\n\n");
-      }
-
-      // Insert data into the database
-      await database.insert(
-        'results',
-        {
-          'fileName': fileName,
-          'content': textContent.toString(),
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-
-      print("Data saved successfully: $fileName"); // Add a print statement here
-
-      // Check if the widget is still mounted before accessing the context
-      if (mounted) {
-        // Show a SnackBar to confirm successful save
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Data saved to database as $fileName'),
-          ),
-        );
-      }
-    } catch (e) {
-      print("Error saving data to database: $e");
+  // 개별 텍스트 재생
+  Future<void> _toggleSpeech(String text) async {
+    if (isPlaying && _currentText == text) {
+      await flutterTts.stop();
+      setState(() {
+        isPlaying = false;
+      });
+    } else {
+      await flutterTts.speak(text);
+      setState(() {
+        isPlaying = true;
+        _currentText = text;
+      });
     }
   }
 
+  // 전체 텍스트 재생
+  Future<void> _readAllText() async {
+    if (isReadingAll) {
+      await flutterTts.stop();
+      setState(() {
+        isReadingAll = false;
+      });
+    } else {
+      final allText = _results
+          .map((result) => "Timestamp: ${result['timeStamp']}\n${result['ocrResult']}\n${result['diagramResult']}")
+          .join('\n\n');
+      await flutterTts.speak(allText);
+      setState(() {
+        isReadingAll = true;
+      });
+    }
+  }
 
-
-
+  @override
+  void dispose() {
+    flutterTts.stop();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Result Screen"),
+        title: Text("Results"),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.home),
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => HomeScreen()),
+              );
+            },
+            tooltip: 'Go to Home',
+          ),
+          IconButton(
+            icon: Icon(isReadingAll ? Icons.stop : Icons.play_circle_fill),
+            onPressed: _readAllText,
+            tooltip: 'Read All Text',
+          ),
+        ],
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : Column(
         children: [
-          // 파일 이름 입력받는 텍스트 필드
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
@@ -187,7 +246,7 @@ class _ResultScreenState extends State<ResultScreen> {
           ElevatedButton(
             onPressed: () {
               if (_fileNameController.text.isNotEmpty) {
-                _saveTextToDatabase(_fileNameController.text, context); // Pass the correct BuildContext
+                _saveTextToDatabase(_fileNameController.text, context);
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: Text('Please enter a valid file name'),
@@ -196,51 +255,28 @@ class _ResultScreenState extends State<ResultScreen> {
             },
             child: Text("Save Results to Database"),
           ),
-
           Expanded(
             child: ListView.builder(
+              padding: const EdgeInsets.all(16.0),
               itemCount: _results.length,
               itemBuilder: (context, index) {
                 final result = _results[index];
+                final timestamp = result['timeStamp'] ?? '';
+                final ocrText = result['ocrResult'] ?? '';
+                final diagramText = result['diagramResult'] ?? '';
+                final displayText = "$ocrText\n$diagramText";
 
-                return Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Card(
-                    elevation: 4,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Timestamp: ${result['timeStamp']}",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                          Text(
-                            "OCR Result:",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: Colors.blue,
-                            ),
-                          ),
-                          Text(result['ocrResult'] ?? ""),
-                          SizedBox(height: 10),
-                          Text(
-                            "Diagram Analysis Result:",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: Colors.green,
-                            ),
-                          ),
-                          Text(result['diagramResult'] ?? ""),
-                        ],
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: ListTile(
+                    title: Text('시간 : $timestamp'),
+                    subtitle: Text(displayText),
+                    trailing: IconButton(
+                      icon: Icon(
+                        isPlaying && _currentText == displayText ? Icons.stop : Icons.play_arrow,
+                        color: Colors.blue,
                       ),
+                      onPressed: () => _toggleSpeech(displayText),
                     ),
                   ),
                 );

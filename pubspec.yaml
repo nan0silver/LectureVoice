@@ -52,6 +52,7 @@ dependencies:
   flutter_cache_manager: ^3.3.0
   sqflite: ^2.0.0+4
   path: ^1.8.0
+  flutter_tts: ^3.4.1
 
 dev_dependencies:
   flutter_test:
@@ -83,7 +84,6 @@ flutter:
   #   - images/a_dot_ham.jpeg
   assets:
     - asset/img/
-    - asset/video/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
