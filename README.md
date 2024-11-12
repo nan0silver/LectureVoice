@@ -1,4 +1,4 @@
-# DiagramVoice
+# LectureVoice
 
 - **Purpose**: Automatic lecture video commentary application
 - **Target Audience**: Visually impaired students
